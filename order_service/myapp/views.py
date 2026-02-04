@@ -44,7 +44,7 @@ def order(request):
             topic="order_created",
             value=json.dumps(order_details).encode("utf-8")
         )
-        producer.produce(topic = "notification", value=json.dumps(order_details).encode("utf-8"))
+        producer.produce(topic="notifications", value=json.dumps(order_details).encode("utf-8"))
         producer.flush()
 
         return JsonResponse({"status": "Order Placed Successfully"})

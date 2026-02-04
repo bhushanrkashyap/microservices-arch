@@ -1,3 +1,0 @@
-confluent-kafka
-Django
-psycopg2-binary
