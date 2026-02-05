@@ -7,8 +7,10 @@ django.setup()
 from confluent_kafka import Consumer, KafkaError
 from notifications.models import Notification
 
+KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+
 conf = {
-    "bootstrap.servers": "localhost:9092",
+    "bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS,
     "group.id": "notification_service_group",
     "auto.offset.reset": "earliest"
 }

@@ -1,4 +1,5 @@
 import json
+import os
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -6,8 +7,10 @@ from confluent_kafka import Producer
 
 from myapp.models import Order
 
+KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+
 producer_conf = {
-    'bootstrap.servers': 'localhost:9092',
+    'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS,
     'group.id': 'order_service_group'
 }
 

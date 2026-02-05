@@ -7,9 +7,11 @@ django.setup()
 from confluent_kafka import Consumer, KafkaError, Producer
 from service.models import Inventory
 
-producer_conf = {"bootstrap.servers": "localhost:9092"}
+KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+
+producer_conf = {"bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS}
 consumer_conf = {
-    "bootstrap.servers": "localhost:9092",
+    "bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS,
     "group.id": "inventory_service_group",
     "auto.offset.reset": "earliest"
 }

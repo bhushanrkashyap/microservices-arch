@@ -12,7 +12,7 @@ services:
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
 
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
@@ -24,3 +24,154 @@ services:
       KAFKA_MIN_INSYNC_REPLICAS: 1
 
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservices-net
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command: |
+      "
+      echo 'Waiting for Kafka to be ready...'
+      sleep 5
+      
+      # Create all required topics
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic order_created --partitions 1 --replication-factor 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic order_confirmed --partitions 1 --replication-factor 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic order_cancelled --partitions 1 --replication-factor 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic inventory_reserved --partitions 1 --replication-factor 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic inventory_failed --partitions 1 --replication-factor 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic payment_success --partitions 1 --replication-factor 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic payment_failed --partitions 1 --replication-factor 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic notifications --partitions 1 --replication-factor 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic user_login --partitions 1 --replication-factor 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic user-registration --partitions 1 --replication-factor 1
+      
+      echo 'Topics created:'
+      kafka-topics --bootstrap-server kafka:9092 --list
+      "
+    networks:
+      - microservices-net
+
+  order_service:
+    build:
+      context: .
+      dockerfile: order_service/Dockerfile
+    container_name: order_service
+    ports:
+      - "8001:8001"
+    environment:
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres123
+      - DB_HOST=database-2.c41c4q0a4z2o.us-east-1.rds.amazonaws.com
+      - DB_PORT=5432
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    networks:
+      - microservices-net
+
+  inventory_service:
+    build:
+      context: .
+      dockerfile: inventory_service/Dockerfile
+    container_name: inventory_service
+    ports:
+      - "8002:8002"
+    environment:
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres123
+      - DB_HOST=database-2.c41c4q0a4z2o.us-east-1.rds.amazonaws.com
+      - DB_PORT=5432
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    networks:
+      - microservices-net
+
+  payment_service:
+    build:
+      context: .
+      dockerfile: payment_service/Dockerfile
+    container_name: payment_service
+    ports:
+      - "8003:8003"
+    environment:
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres123
+      - DB_HOST=database-2.c41c4q0a4z2o.us-east-1.rds.amazonaws.com
+      - DB_PORT=5432
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    networks:
+      - microservices-net
+
+  notification_service:
+    build:
+      context: .
+      dockerfile: notification_service/Dockerfile
+    container_name: notification_service
+    ports:
+      - "8004:8004"
+    environment:
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres123
+      - DB_HOST=database-2.c41c4q0a4z2o.us-east-1.rds.amazonaws.com
+      - DB_PORT=5432
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    networks:
+      - microservices-net
+
+  user_service:
+    build:
+      context: .
+      dockerfile: user_service/Dockerfile
+    container_name: user_service
+    ports:
+      - "8005:8005"
+    environment:
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres123
+      - DB_HOST=database-2.c41c4q0a4z2o.us-east-1.rds.amazonaws.com
+      - DB_PORT=5432
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    networks:
+      - microservices-net
+
+networks:
+  microservices-net:
+    driver: bridge

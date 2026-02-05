@@ -5,9 +5,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "payment_service.settings")
 django.setup()
 
-producer_conf = {"bootstrap.servers": "localhost:9092"}
+KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+
+producer_conf = {"bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS}
 consumer_conf = {
-    "bootstrap.servers": "localhost:9092",
+    "bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS,
     "group.id": "payment_service_group",
     "auto.offset.reset": "earliest"
 }

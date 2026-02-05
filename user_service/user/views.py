@@ -1,11 +1,13 @@
 import json
+import os
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
 from .models import User
 from confluent_kafka import Producer
 
-producer = Producer({"bootstrap.servers": "localhost:9092"})
+KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+producer = Producer({"bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS})
 
 @csrf_exempt
 def user_login(request):
