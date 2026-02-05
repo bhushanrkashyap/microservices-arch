@@ -70,7 +70,7 @@ services:
     ports:
       - "8001:8001"
     environment:
-      - DB_NAME=postgres
+      - DB_NAME=order_db
       - DB_USER=postgres
       - DB_PASSWORD=postgres123
       - DB_HOST=database-2.c41c4q0a4z2o.us-east-1.rds.amazonaws.com
@@ -92,7 +92,7 @@ services:
     ports:
       - "8002:8002"
     environment:
-      - DB_NAME=postgres
+      - DB_NAME=inventory_db
       - DB_USER=postgres
       - DB_PASSWORD=postgres123
       - DB_HOST=database-2.c41c4q0a4z2o.us-east-1.rds.amazonaws.com
@@ -114,7 +114,7 @@ services:
     ports:
       - "8003:8003"
     environment:
-      - DB_NAME=postgres
+      - DB_NAME=payment_db
       - DB_USER=postgres
       - DB_PASSWORD=postgres123
       - DB_HOST=database-2.c41c4q0a4z2o.us-east-1.rds.amazonaws.com
@@ -136,7 +136,7 @@ services:
     ports:
       - "8004:8004"
     environment:
-      - DB_NAME=postgres
+      - DB_NAME=notification_db
       - DB_USER=postgres
       - DB_PASSWORD=postgres123
       - DB_HOST=database-2.c41c4q0a4z2o.us-east-1.rds.amazonaws.com
@@ -158,7 +158,7 @@ services:
     ports:
       - "8005:8005"
     environment:
-      - DB_NAME=postgres
+      - DB_NAME=user_db
       - DB_USER=postgres
       - DB_PASSWORD=postgres123
       - DB_HOST=database-2.c41c4q0a4z2o.us-east-1.rds.amazonaws.com
