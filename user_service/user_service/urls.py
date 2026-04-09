@@ -16,10 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from user.views import user_login , user_register
+from user.views import user_login , user_register , verify_token , rate_limiting
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('register/', user_register, name='user'),
-    path('login/' , user_login , name = "user")
+    path('login/' , user_login , name = "user"),
+    path('verify-token/', verify_token, name='verify_token'),
+    path('rate-limit/', rate_limiting, name='rate_limit'),
 ]

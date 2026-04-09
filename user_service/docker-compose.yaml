@@ -12,7 +12,7 @@ services:
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
 
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
@@ -24,10 +24,3 @@ services:
       KAFKA_MIN_INSYNC_REPLICAS: 1
 
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
-    healthcheck:
-      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - microservices-net
