@@ -1,9 +1,10 @@
 import json
 import os
-
+from django.core.cache import cache
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from confluent_kafka import Producer
+from confluent_kafka import Producer , Consumer
+from django.http import HttpResponse
 
 from myapp.models import Order
 
@@ -13,7 +14,6 @@ producer_conf = {
     'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS,
     'group.id': 'order_service_group'
 }
-
 producer = Producer(producer_conf)
 
 
@@ -36,18 +36,40 @@ def order(request):
         )
 
         order_details = {
-            "order_id": order_obj.order_id,
-            "product_name": product_name,
-            "quantity": quantity,
-            "price": price,
-            "status" : "Order Placed"
-        }
+    "data": {
+        "order_id": order_obj.order_id,
+
+    }
+}
 
         producer.produce(
-            topic="order_created",
+            topic="order-confirmed",
             value=json.dumps(order_details).encode("utf-8")
         )
         producer.produce(topic="notifications", value=json.dumps(order_details).encode("utf-8"))
         producer.flush()
 
         return JsonResponse({"status": "Order Placed Successfully"})
+
+def getupdate(request):
+    order_id = request.GET.get('order_id')
+    status = cache.get(f"order_{order_id}")
+
+    if status:
+        return JsonResponse({
+            "order_id": order_id,
+            "status": status,
+            "source": "redis-cache"
+        })
+    try:
+        order = Order.objects.get(order_id=order_id)
+
+        return JsonResponse({
+            "order_id": order_id,
+            "status": order.status,
+            "source": "db"
+        })
+
+    except Exception as e:
+        return JsonResponse({"error": "not found"}, status=404 , error=str(e))
+    
