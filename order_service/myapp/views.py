@@ -53,23 +53,37 @@ def order(request):
 
 def getupdate(request):
     order_id = request.GET.get('order_id')
-    status = cache.get(f"order_{order_id}")
-
+    
+    if not order_id:
+        return JsonResponse({"error": "order_id parameter is required"}, status=400)
+    
+    try:
+        order_id = int(order_id)
+    except ValueError:
+        return JsonResponse({"error": "order_id must be an integer"}, status=400)
+    
+    # Debug: Check what key format is being used
+    cache_key = f"order_{order_id}"
+    print(f"Attempting to get cache key: {cache_key}")
+    
+    status = cache.get(cache_key)
+    print(f"Cache result: {status}")
+    
     if status:
         return JsonResponse({
             "order_id": order_id,
             "status": status,
             "source": "redis-cache"
         })
+    
+    # Fall back to database
     try:
         order = Order.objects.get(order_id=order_id)
-
         return JsonResponse({
             "order_id": order_id,
             "status": order.status,
             "source": "db"
         })
-
-    except Exception as e:
-        return JsonResponse({"error": "not found"}, status=404 , error=str(e))
+    except Order.DoesNotExist:
+        return JsonResponse({"error": "Order not found"}, status=404)
     
