@@ -15,13 +15,16 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.http import JsonResponse
 from django.urls import path
-from user.views import user_login , user_register , verify_token , rate_limiting
+from user.views import user_login , user_register , verify_token , rate_limiting , user_detail
 
 urlpatterns = [
+    path('health/', lambda request: JsonResponse({"status": "healthy"}), name='health'),
     path('admin/', admin.site.urls),
     path('register/', user_register, name='user'),
     path('login/' , user_login , name = "user"),
     path('verify-token/', verify_token, name='verify_token'),
+    path('details/<int:user_id>/', user_detail, name='user_detail'),
     path('rate-limit/', rate_limiting, name='rate_limit'),
 ]

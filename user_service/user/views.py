@@ -13,8 +13,8 @@ from ipware import get_client_ip
 from django.core.cache import cache
 
 
-KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
-producer = Producer({"bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS})
+from shared.config.kafka import producer_config
+producer = Producer(producer_config())
 
 def delivery(err , msg):
     if err:
@@ -143,3 +143,22 @@ def rate_limiting(request):
     else:
         cache.set(key, 1, timeout=60)
     return None
+
+def user_detail(request, user_id):
+    """Read-heavy GET: cache user details in Redis (TTL 300s)."""
+    if request.method != "GET":
+        return JsonResponse({"error": "Only GET allowed"}, status=405)
+
+    key = f"user:details:{user_id}"
+    cached = cache.get(key)
+    if cached is not None:
+        return JsonResponse({**cached, "source": "cache"})
+
+    try:
+        u = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=404)
+
+    data = {"user_id": u.id, "username": u.username, "email": u.email}
+    cache.set(key, data, timeout=300)
+    return JsonResponse({**data, "source": "db"})
